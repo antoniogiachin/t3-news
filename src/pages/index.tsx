@@ -41,8 +41,6 @@ const Home: NextPage = () => {
       <main className="flex flex-col">
         <section>
           <TheSearchBar setSearch={setSearch} search={search} />
-        </section>
-        <section>
           <TheHero />
         </section>
       </main>
