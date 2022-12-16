@@ -1,3 +1,26 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+body {
+  height: 100vh;
+}
+
+header {
+  height: 64px;
+}
+
+main {
+  height: calc(100vh - 128px);
+  min-height: 500px;
+}
+
+footer {
+  height: 64px;
+  position: fixed;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  bottom: 0;
+  width: 100%;
+}
