@@ -1,6 +1,8 @@
 import { type NextPage } from "next";
 import Head from "next/head";
-import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { TheHero } from "../components/UI/TheHero";
+import { TheSearchBar } from "../components/UI/TheSearchBar";
 import { useTheme } from "../hooks/useTheme";
 
 const Home: NextPage = () => {
@@ -37,10 +39,12 @@ const Home: NextPage = () => {
         <TheHeader />
       </header>
       <main className="flex flex-col">
-        <section className="mx-auto flex w-1/3 items-center justify-center pt-8">
+        <section>
           <TheSearchBar setSearch={setSearch} search={search} />
         </section>
-        <section></section>
+        <section>
+          <TheHero />
+        </section>
       </main>
       <footer className="bg-secondary">
         <TheFooter />
@@ -65,47 +69,5 @@ export const TheFooter: React.FC = () => {
     <h2 className="text-xl text-accent-content">
       T3 - News is Developed and Manteined by Tonino
     </h2>
-  );
-};
-
-interface TheSearchBarProps {
-  search?: string;
-  setSearch: Dispatch<SetStateAction<string>>;
-}
-
-export const TheSearchBar: React.FC<TheSearchBarProps> = ({
-  search,
-  setSearch,
-}) => {
-  return (
-    <>
-      <label
-        htmlFor="my-modal"
-        className="input-bordered input-accent input flex w-full cursor-pointer items-center justify-center p-6"
-      >
-        {search !== "" ? search : "Start Searching Here!"}
-      </label>
-      <input type="checkbox" id="my-modal" className="modal-toggle" />
-      <div className="modal">
-        <div className="modal-box">
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            type="text"
-            placeholder="Type here"
-            className="input-bordered input-accent input w-full max-w-xs"
-          />
-          <div className="modal-action">
-            <label
-              htmlFor="my-modal"
-              className="btn"
-              onClick={() => setSearch("")}
-            >
-              Search
-            </label>
-          </div>
-        </div>
-      </div>
-    </>
   );
 };
