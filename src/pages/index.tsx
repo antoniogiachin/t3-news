@@ -33,9 +33,12 @@ const Home: NextPage<{ user: SessionUser }> = ({ user }) => {
   const [search, setSearch] = useState<string>("");
   const [showUserMenu, setShowUserMenu] = useState<boolean>(false);
 
-  const { data: getAll } = trpc.example.getAllTodayNews.useQuery({
-    loc: getLoc ?? "us",
-  });
+  const { data: getAll } = trpc.example.getAllTodayNews.useQuery(
+    {
+      loc: getLoc ?? "us",
+    },
+    { refetchOnWindowFocus: false }
+  );
 
   const { data: allByKeyword, refetch: startSearch } =
     trpc.example.searchByKeyword.useQuery(
@@ -51,7 +54,10 @@ const Home: NextPage<{ user: SessionUser }> = ({ user }) => {
     },
   });
 
-  const { data: searchHistory } = trpc.example.getSearchHistory.useQuery();
+  const { data: searchHistory } = trpc.example.getSearchHistory.useQuery(
+    undefined,
+    { refetchOnWindowFocus: false }
+  );
 
   useEffect(() => {
     console.log(getAll);
