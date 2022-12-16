@@ -1,22 +1,9 @@
 export const THEMES_LIST = [
   "light",
   "dark",
-  "cupcake",
-  "corporate",
-  "synthwave",
-  "retro",
-  "lofi",
-  "pastel",
-  "fantasy",
-  "wireframe",
   "black",
   "dracula",
-  "cmyk",
-  "business",
-  "acid",
-  "lemonade",
   "night",
-  "coffee",
   "winter",
 ];
 
