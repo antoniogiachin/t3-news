@@ -1,13 +1,18 @@
+import type { Search } from "@prisma/client";
 import type { Dispatch, SetStateAction } from "react";
 
 interface TheSearchBarProps {
   search?: string;
   setSearch: Dispatch<SetStateAction<string>>;
+  handleSearch: (keyword: string, mode?: string) => Promise<void>;
+  searchHistory?: Search[];
 }
 
 export const TheSearchBar: React.FC<TheSearchBarProps> = ({
   search,
   setSearch,
+  handleSearch,
+  searchHistory,
 }) => {
   return (
     <article className="mx-auto flex w-1/3 items-center justify-center pt-16">
@@ -27,11 +32,26 @@ export const TheSearchBar: React.FC<TheSearchBarProps> = ({
             placeholder="Type here"
             className="input-bordered input-accent input w-full"
           />
+          {searchHistory &&
+            searchHistory.map((sh) => (
+              <div
+                key={sh.id}
+                className="flex items-center justify-between p-4"
+              >
+                <span className="text-xl capitalize">{sh.keyword}</span>
+                <button
+                  className="btn"
+                  onClick={() => handleSearch(sh.keyword, "search")}
+                >
+                  Retry Search
+                </button>
+              </div>
+            ))}
           <div className="modal-action">
             <label
               htmlFor="my-modal"
               className="btn"
-              onClick={() => setSearch("")}
+              onClick={() => handleSearch(search as string, "search")}
             >
               Search
             </label>

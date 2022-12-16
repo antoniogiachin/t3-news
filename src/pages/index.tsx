@@ -5,12 +5,15 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import { TheHero } from "../components/UI/TheHero";
 import { TheSearchBar } from "../components/UI/TheSearchBar";
+import { useLocation } from "../hooks/useLocation";
+import { seveSearchToLS } from "../utils/saveUtils";
 import { useTheme } from "../hooks/useTheme";
 
 import { getServerAuthSession } from "../server/common/get-server-auth-session";
 import { makeSerializable } from "../server/common/make-serializable";
+import { trpc } from "../utils/trpc";
 
-type SessionUser =
+export type SessionUser =
   | ({
       id: string;
     } & {
@@ -23,9 +26,36 @@ type SessionUser =
 
 const Home: NextPage<{ user: SessionUser }> = ({ user }) => {
   useTheme();
+  const getLoc = useLocation();
+
+  const utils = trpc.useContext();
 
   const [search, setSearch] = useState<string>("");
   const [showUserMenu, setShowUserMenu] = useState<boolean>(false);
+
+  const { data: getAll } = trpc.example.getAllTodayNews.useQuery({
+    loc: getLoc ?? "us",
+  });
+
+  const { data: allByKeyword, refetch: startSearch } =
+    trpc.example.searchByKeyword.useQuery(
+      {
+        keyword: search,
+      },
+      { enabled: false }
+    );
+
+  const { mutateAsync: saveSearch } = trpc.example.saveSearch.useMutation({
+    onSuccess() {
+      utils.example.getSearchHistory.invalidate();
+    },
+  });
+
+  const { data: searchHistory } = trpc.example.getSearchHistory.useQuery();
+
+  useEffect(() => {
+    console.log(getAll);
+  }, [getAll]);
 
   const handleLogin = async () => {
     await signIn();
@@ -39,15 +69,28 @@ const Home: NextPage<{ user: SessionUser }> = ({ user }) => {
     if (user) setShowUserMenu((prev) => !prev);
   };
 
-  const handleSearch = async (keyword: string) => {
+  const handleSearch = async (keyword: string, mode = "debounce") => {
+    if (!search || search.trim() === "") return;
     // logiche di ricerca
     // settare timeout debounce, salvare ricerche recenti utente sia DB che LS se non auth
-    console.log(keyword);
+    if (!user) {
+      seveSearchToLS(keyword);
+      return;
+    }
+
+    if (mode !== "debounce") {
+      await saveSearch({ keyword });
+      console.log("data", searchHistory);
+      await startSearch();
+      setSearch("");
+    }
+
+    await startSearch();
   };
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (search && search !== "") {
+      if (search && search.trim() !== "") {
         handleSearch(search);
       }
     }, 1000);
@@ -55,6 +98,7 @@ const Home: NextPage<{ user: SessionUser }> = ({ user }) => {
     return () => {
       clearTimeout(timer);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search]);
 
   return (
@@ -74,7 +118,12 @@ const Home: NextPage<{ user: SessionUser }> = ({ user }) => {
       </header>
       <main className="flex flex-col">
         <section>
-          <TheSearchBar setSearch={setSearch} search={search} />
+          <TheSearchBar
+            setSearch={setSearch}
+            search={search}
+            handleSearch={handleSearch}
+            searchHistory={searchHistory}
+          />
           <TheHero showUserMenu={showUserMenu} handleLogout={handleLogout} />
         </section>
       </main>
