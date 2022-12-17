@@ -2,7 +2,7 @@ import type { GetServerSidePropsContext, NextPage } from "next";
 import { signIn, signOut } from "next-auth/react";
 import Head from "next/head";
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { TheHero } from "../components/UI/TheHero";
 import { TheSearchBar } from "../components/UI/TheSearchBar";
 import { useLocation } from "../hooks/useLocation";
@@ -54,7 +54,6 @@ const Home: NextPage<{ user: SessionUser }> = ({ user }) => {
       { enabled: false }
     );
 
-  const searchHistory = useRef<Search[]>();
   const { data: historyFromServer } = trpc.example.getSearchHistory.useQuery(
     undefined,
     {
@@ -68,15 +67,13 @@ const Home: NextPage<{ user: SessionUser }> = ({ user }) => {
     },
   });
 
-  const historyFromLS = getSearchHistoryFromLS();
-
-  useEffect(() => {
-    if (historyFromServer && user) {
-      searchHistory.current = historyFromServer ?? [];
-    } else if (historyFromLS && !user) {
-      searchHistory.current = getSearchHistoryFromLS() ?? [];
-    }
-  }, [historyFromServer, user, historyFromLS]);
+  let searchHistory!: Search[];
+  const historyFromLS = useMemo(() => getSearchHistoryFromLS(), []);
+  if (user) {
+    searchHistory = historyFromServer as Search[];
+  } else {
+    searchHistory = historyFromLS as Search[];
+  }
 
   const handleLogin = async () => {
     await signIn();
@@ -168,7 +165,7 @@ const Home: NextPage<{ user: SessionUser }> = ({ user }) => {
             setSearch={setSearch}
             search={search}
             handleSearch={handleSearch}
-            searchHistory={searchHistory.current}
+            searchHistory={searchHistory}
           />
           <TheHero showUserMenu={showUserMenu} handleLogout={handleLogout} />
         </section>

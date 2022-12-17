@@ -1,5 +1,5 @@
 import type { Search } from "@prisma/client";
-import type { Dispatch, SetStateAction } from "react";
+import type { Dispatch, MutableRefObject, SetStateAction } from "react";
 
 interface TheSearchBarProps {
   search?: string;
@@ -36,7 +36,7 @@ export const TheSearchBar: React.FC<TheSearchBarProps> = ({
             className="input-bordered input-accent input w-full"
           />
           {searchHistory &&
-            searchHistory.map((sh) => (
+            searchHistory?.map((sh) => (
               <div
                 key={sh.id}
                 className="flex items-center justify-between p-4"
