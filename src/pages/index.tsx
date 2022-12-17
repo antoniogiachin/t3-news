@@ -36,16 +36,17 @@ const Home: NextPage<{ user: SessionUser }> = ({ user }) => {
   const utils = trpc.useContext();
 
   const [search, setSearch] = useState<string>("");
+  const [retrySearch, setRetrySearch] = useState<boolean>(false);
   const [showUserMenu, setShowUserMenu] = useState<boolean>(false);
 
-  const { data: getAll } = trpc.example.getAllTodayNews.useQuery(
+  const { data: getAllTodayByLoc } = trpc.example.getAllTodayNews.useQuery(
     {
       loc: getLoc as string,
     },
     { refetchOnWindowFocus: false }
   );
 
-  const { data: allByKeyword, refetch: startSearch } =
+  const { data: getAllByKeyword, refetch: startSearch } =
     trpc.example.searchByKeyword.useQuery(
       {
         keyword: search,
@@ -101,8 +102,15 @@ const Home: NextPage<{ user: SessionUser }> = ({ user }) => {
       return;
     }
 
+    setRetrySearch(false);
 
-    if (mode !== "debounce") {
+    if (mode === "retry") {
+      setSearch(keyword);
+      setRetrySearch(true);
+      return;
+    }
+
+    if (mode === "search") {
       if (user) {
         await saveSearch({ keyword });
       } else {
@@ -115,6 +123,16 @@ const Home: NextPage<{ user: SessionUser }> = ({ user }) => {
 
     await startSearch();
   };
+
+  useEffect(() => {
+    const retryCb = async () => {
+      await startSearch();
+      setSearch("");
+    };
+    if (retrySearch && search) {
+      retryCb();
+    }
+  }, [retrySearch, search, startSearch]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -177,8 +195,6 @@ export const TheHeader: React.FC<TheHeaderProps> = ({
   showUserMenu,
   handleShowUserMenu,
 }) => {
-  console.log(user);
-
   return (
     <div className="flex h-full items-center  px-12 text-accent-content">
       <h1 className=" text-2xl">T3 - NEWS</h1>

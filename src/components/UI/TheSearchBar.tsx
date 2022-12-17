@@ -1,5 +1,5 @@
 import type { Search } from "@prisma/client";
-import type { Dispatch, MutableRefObject, SetStateAction } from "react";
+import type { Dispatch, SetStateAction } from "react";
 
 interface TheSearchBarProps {
   search?: string;
@@ -17,8 +17,6 @@ export const TheSearchBar: React.FC<TheSearchBarProps> = ({
   handleSearch,
   searchHistory,
 }) => {
-  console.log(searchHistory);
-
   return (
     <article className="mx-auto flex w-1/3 items-center justify-center pt-16">
       <label

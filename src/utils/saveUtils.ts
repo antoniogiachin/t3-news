@@ -1,12 +1,3 @@
-/**?
- * {
-    id: string;
-    keyword: string;
-    createdAt: Date;
-    userId: string | null;
-}
- */
-
 import type { Search } from "@prisma/client";
 
 export const seveSearchToLS = (keyword: string): void => {
