@@ -2,16 +2,21 @@ import type { GetServerSidePropsContext, NextPage } from "next";
 import { signIn, signOut } from "next-auth/react";
 import Head from "next/head";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { TheHero } from "../components/UI/TheHero";
 import { TheSearchBar } from "../components/UI/TheSearchBar";
 import { useLocation } from "../hooks/useLocation";
-import { seveSearchToLS } from "../utils/saveUtils";
+import {
+  deleteSearchHistoryFromLS,
+  getSearchHistoryFromLS,
+  seveSearchToLS,
+} from "../utils/saveUtils";
 import { useTheme } from "../hooks/useTheme";
 
 import { getServerAuthSession } from "../server/common/get-server-auth-session";
 import { makeSerializable } from "../server/common/make-serializable";
 import { trpc } from "../utils/trpc";
+import type { Search } from "@prisma/client";
 
 export type SessionUser =
   | ({
@@ -35,7 +40,7 @@ const Home: NextPage<{ user: SessionUser }> = ({ user }) => {
 
   const { data: getAll } = trpc.example.getAllTodayNews.useQuery(
     {
-      loc: getLoc ?? "us",
+      loc: getLoc as string,
     },
     { refetchOnWindowFocus: false }
   );
@@ -48,23 +53,33 @@ const Home: NextPage<{ user: SessionUser }> = ({ user }) => {
       { enabled: false }
     );
 
+  const searchHistory = useRef<Search[]>();
+  const { data: historyFromServer } = trpc.example.getSearchHistory.useQuery(
+    undefined,
+    {
+      refetchOnWindowFocus: false,
+    }
+  );
+
   const { mutateAsync: saveSearch } = trpc.example.saveSearch.useMutation({
     onSuccess() {
       utils.example.getSearchHistory.invalidate();
     },
   });
 
-  const { data: searchHistory } = trpc.example.getSearchHistory.useQuery(
-    undefined,
-    { refetchOnWindowFocus: false }
-  );
+  const historyFromLS = getSearchHistoryFromLS();
 
   useEffect(() => {
-    console.log(getAll);
-  }, [getAll]);
+    if (historyFromServer && user) {
+      searchHistory.current = historyFromServer ?? [];
+    } else if (historyFromLS && !user) {
+      searchHistory.current = getSearchHistoryFromLS() ?? [];
+    }
+  }, [historyFromServer, user, historyFromLS]);
 
   const handleLogin = async () => {
     await signIn();
+    deleteSearchHistoryFromLS();
   };
 
   const handleLogout = async () => {
@@ -75,20 +90,27 @@ const Home: NextPage<{ user: SessionUser }> = ({ user }) => {
     if (user) setShowUserMenu((prev) => !prev);
   };
 
-  const handleSearch = async (keyword: string, mode = "debounce") => {
-    if (!search || search.trim() === "") return;
-    // logiche di ricerca
-    // settare timeout debounce, salvare ricerche recenti utente sia DB che LS se non auth
-    if (!user) {
-      seveSearchToLS(keyword);
+  const handleSearch = async (
+    keyword: string,
+    mode: "debounce" | "search" | "retry" = "debounce"
+  ) => {
+    if (
+      (!search && mode === "debounce" && search.trim() === "") ||
+      (!search && mode === "search" && search.trim() === "")
+    ) {
       return;
     }
 
+
     if (mode !== "debounce") {
-      await saveSearch({ keyword });
-      console.log("data", searchHistory);
+      if (user) {
+        await saveSearch({ keyword });
+      } else {
+        seveSearchToLS(keyword);
+      }
       await startSearch();
       setSearch("");
+      return;
     }
 
     await startSearch();
@@ -128,7 +150,7 @@ const Home: NextPage<{ user: SessionUser }> = ({ user }) => {
             setSearch={setSearch}
             search={search}
             handleSearch={handleSearch}
-            searchHistory={searchHistory}
+            searchHistory={searchHistory.current}
           />
           <TheHero showUserMenu={showUserMenu} handleLogout={handleLogout} />
         </section>
