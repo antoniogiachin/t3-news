@@ -2,7 +2,7 @@ import type { GetServerSidePropsContext, NextPage } from "next";
 import { signIn, signOut } from "next-auth/react";
 import Head from "next/head";
 import Image from "next/image";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { TheHero } from "../components/UI/TheHero";
 import { TheSearchBar } from "../components/UI/TheSearchBar";
 import { useLocation } from "../hooks/useLocation";
