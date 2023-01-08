@@ -46,13 +46,16 @@ const Home: NextPage<{ user: SessionUser }> = ({ user }) => {
     { refetchOnWindowFocus: false }
   );
 
-  const { data: getAllByKeyword, refetch: startSearch } =
-    trpc.example.searchByKeyword.useQuery(
-      {
-        keyword: search,
-      },
-      { enabled: false }
-    );
+  const {
+    data: getAllByKeyword,
+    refetch: startSearch,
+    isFetching: searchByKFetching,
+  } = trpc.example.searchByKeyword.useQuery(
+    {
+      keyword: search,
+    },
+    { enabled: false }
+  );
 
   const { data: historyFromServer } = trpc.example.getSearchHistory.useQuery(
     undefined,
@@ -144,6 +147,10 @@ const Home: NextPage<{ user: SessionUser }> = ({ user }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search]);
 
+  useEffect(() => {
+    console.log(searchByKFetching);
+  }, [searchByKFetching]);
+
   return (
     <>
       <Head>
@@ -165,6 +172,7 @@ const Home: NextPage<{ user: SessionUser }> = ({ user }) => {
             setSearch={setSearch}
             search={search}
             handleSearch={handleSearch}
+            searchByKFetching={searchByKFetching}
             searchHistory={searchHistory}
           />
           <TheHero showUserMenu={showUserMenu} handleLogout={handleLogout} />
@@ -215,7 +223,7 @@ export const TheHeader: React.FC<TheHeaderProps> = ({
             )}
           </div>
         ) : (
-          <button className="btn" onClick={handleLogin}>
+            <button className="btn" onClick={handleLogin}>
             Login
           </button>
         )}

@@ -1,9 +1,11 @@
+
 import type { Search } from "@prisma/client";
-import type { Dispatch, MutableRefObject, SetStateAction } from "react";
+import type { Dispatch, SetStateAction } from "react";
 
 interface TheSearchBarProps {
   search?: string;
   setSearch: Dispatch<SetStateAction<string>>;
+  searchByKFetching: boolean;
   handleSearch: (
     keyword: string,
     mode?: "debounce" | "search" | "retry"
@@ -15,6 +17,7 @@ export const TheSearchBar: React.FC<TheSearchBarProps> = ({
   search,
   setSearch,
   handleSearch,
+  searchByKFetching,
   searchHistory,
 }) => {
   return (
@@ -39,11 +42,13 @@ export const TheSearchBar: React.FC<TheSearchBarProps> = ({
             searchHistory?.map((sh) => (
               <div
                 key={sh.id}
-                className="flex items-center justify-between p-4"
+                className="flex items-center justify-between py-4"
               >
-                <span className="text-xl capitalize">{sh.keyword}</span>
+                <span className="text capitalize">{sh.keyword}</span>
                 <button
-                  className="btn"
+                  className={`btn-xs btn ${
+                    searchByKFetching && search === sh.keyword && "loading"
+                  }`}
                   onClick={() => handleSearch(sh.keyword, "retry")}
                 >
                   Retry Search
@@ -53,13 +58,17 @@ export const TheSearchBar: React.FC<TheSearchBarProps> = ({
           <div className="modal-action">
             <label
               htmlFor="my-modal"
-              className="btn"
+              className={`btn ${searchByKFetching && "loading"}`}
               onClick={() => {
                 if (!search) return;
                 handleSearch(search as string, "search");
               }}
             >
-              {search ? "Search" : "Close"}
+              {search && !searchByKFetching
+                ? "Search"
+                : searchByKFetching
+                ? "Searching..."
+                : "Close"}
             </label>
           </div>
         </div>
